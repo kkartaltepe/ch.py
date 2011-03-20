@@ -22,7 +22,6 @@ Versions
 --------
 Increment major version number if not fully backwards compatible.
 Increment minor version number if features or big fixes added.
-Increment letter after version for little fixes.
 
 License
 -------

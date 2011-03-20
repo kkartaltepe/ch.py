@@ -2,7 +2,7 @@
 # File: ch.py
 # Title: Chatango Library
 # Author: Lumirayz/Lumz <lumirayz@gmail.com>
-# Version: 1.2a
+# Version: 1.2
 # Description:
 #  An event-based library for connecting to one or multiple Chatango rooms, has
 #  support for several things including: messaging, message font,
@@ -842,6 +842,18 @@ class Room:
 			except IndexError:
 				return None
 		return None
+	
+	def findUser(self, name):
+		name = name.lower()
+		ul = self.getUserlist()
+		udi = dict(zip([u.name for u in ul], ul))
+		cname = None
+		for n in udi.keys():
+			if n.find(name) != -1:
+				if cname: return None #ambigious!!
+				cname = n
+		if cname: return udi[cname]
+		else: return None
 	
 	####
 	# History
