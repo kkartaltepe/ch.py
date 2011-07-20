@@ -26,13 +26,19 @@ import random
 import re
 import sys
 import select
-import urllib.request
-import urllib.parse
+
 
 ################################################################
 # Python 2 compatibility
 ################################################################
-if sys.version_info[0] < 3: input = raw_input
+if sys.version_info[0] < 3:
+	class urllib:
+		parse = __import__("urllib")
+		request = __import__("urllib2")
+	input = raw_input
+else:
+	import urllib.request
+	import urllib.parse
 
 ################################################################
 # Constants
@@ -169,7 +175,7 @@ def getAnonId(n, ssid):
 ################################################################
 # PM Auth
 ################################################################
-auth_re = re.compile(r"^auth.chatango.com *= *([^;]*)", re.IGNORECASE)
+auth_re = re.compile(r"auth\.chatango\.com ?= ?([^;]*)", re.IGNORECASE)
 
 def _getAuth(name, password):
 	"""
@@ -195,11 +201,13 @@ def _getAuth(name, password):
 	except Exception:
 		return None
 	for header, value in headers.items():
-		if header == "Set-Cookie" and value.startswith("auth.chatango.com"):
-			auth = auth_re.match(value).group(1)
-			if auth == "":
-				return None
-			return auth
+		if header.lower() == "set-cookie":
+			m = auth_re.search(value)
+			if m:
+				auth = m.group(1)
+				if auth == "":
+					return None
+				return auth
 	return None
 
 ################################################################
@@ -228,6 +236,7 @@ class PM:
 	# Connections
 	####
 	def _connect(self):
+		self._wbuf = b""
 		self._sock = socket.socket()
 		self._sock.connect((self._mgr._PMHost, self._mgr._PMPort))
 		self._sock.setblocking(False)
@@ -241,6 +250,7 @@ class PM:
 		if self._auid == None:
 			self._sock.close()
 			self._callEvent("onLoginFail")
+			self._sock = None
 			return False
 		self._sendCommand("tlogin", self._auid, "2")
 		self._setWriteLock(True)
@@ -253,6 +263,7 @@ class PM:
 	def _disconnect(self):
 		self._connected = False
 		self._sock.close()
+		self._sock = None
 	
 	####
 	# Feed
@@ -1633,7 +1644,7 @@ class RoomManager:
 			self._tick()
 	
 	@classmethod
-	def easy_start(cl, rooms = None, name = None, password = None):
+	def easy_start(cl, rooms = None, name = None, password = None, pm = True):
 		"""
 		Prompts the user for missing info, then starts.
 		
@@ -1650,7 +1661,7 @@ class RoomManager:
 		if name == "": name = None
 		if not password: password = str(input("User password: "))
 		if password == "": password = None
-		self = cl(name, password)
+		self = cl(name, password, pm = pm)
 		for room in rooms:
 			self.joinRoom(room)
 		self.main()
