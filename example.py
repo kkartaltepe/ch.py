@@ -109,5 +109,8 @@ class TestBot(ch.RoomManager):
 	
 	def onMessageDelete(self, room, user, msg):
 		room.message("a message got deleted! " + user.name + ": " + msg.body)
+	
+	def onPMMessage(self, pm, user, body):
+		pm.message(user, body) #hehe... echo :3
 
 if __name__ == "__main__": TestBot.easy_start()
