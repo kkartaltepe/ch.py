@@ -281,7 +281,6 @@ class PM:
 		self._callEvent("onRaw", data)
 		data = data.split(":")
 		cmd, args = data[0], data[1:]
-		print(cmd, args)
 		func = "rcmd_" + cmd
 		if hasattr(self, func):
 			getattr(self, func)(args)
@@ -1601,7 +1600,7 @@ class RoomManager:
 		li = list(self._rooms.values())
 		if self._pm:
 			li.append(self._pm)
-		return [c for c in li if c._connected]
+		return [c for c in li if c._sock != None]
 	
 	####
 	# Main
