@@ -630,9 +630,9 @@ class Room:
 				user = msg.user
 				self._callEvent("onHistoryMessage", user, msg)
 				self._addHistory(msg)
+			del self._i_log
 		else:
 			self._callEvent("onReconnect")
-		del self._i_log
 		self._connectAmmount += 1
 		self._setWriteLock(False)
 	
@@ -1145,7 +1145,7 @@ class RoomManager:
 	_userlistMemory = 50
 	_userlistEventUnique = False
 	_tooBigMessage = BigMessage_Multiple
-	_maxLength = 800
+	_maxLength = 1800
 	_maxHistoryLength = 150
 	
 	####
