@@ -1,7 +1,7 @@
 ################################################################
 # File: ch.py
 # Title: Chatango Library
-# Author: Lumirayz/Lumz <lumirayz@gmail.com>
+# Author: Lumirayz <lumirayz@gmail.com>
 # Version: 1.3
 # Description:
 #  An event-based library for connecting to one or multiple Chatango rooms, has
@@ -54,6 +54,7 @@ BigMessage_Cut      = 1
 ################################################################
 specials = {'mitvcanal': 56, 'magicc666': 67, 'livenfree': 18, 'eplsiite': 56, 'soccerjumbo2': 21, 'bguk': 67, 'animachat20': 34, 'cricket365live': 21, 'pokemonepisodeorg': 22, 'sport24lt': 56, 'mywowpinoy': 5, 'phnoytalk': 21, 'futboldirectochat': 67, 'flowhot-chat-online': 12, 'watchanimeonn': 26, 'cricvid-hitcric-': 51, 'bobproctor': 56, 'fullsportshd2': 18, 'chia-anime': 12, 'narutochatt': 52, 'animeproxer': 55, 'ttvsports': 56, 'leeplarp': 27, 'portalsports': 18, 'stream2watch3': 56, 'proudlypinoychat': 51, 'ver-anime': 34, 'iluvpinas': 53, 'vipstand': 21, 'eafangames': 56, 'worldfootballusch2': 18, 'soccerjumbo': 21, 'myfoxdfw': 67, 'animelinkz': 20, 'rgsmotrisport': 51, 'bateriafina-8': 8, 'as-chatroom': 10, 'dbzepisodeorg': 12, 'watch-dragonball': 19, 'narutowire': 10, 'tvanimefreak': 54}
 tsweights = [['5', 61], ['6', 61], ['7', 61], ['8', 61], ['16', 61], ['17', 61], ['9', 90], ['11', 90], ['13', 90], ['14', 90], ['15', 90], ['23', 110], ['24', 110], ['25', 110], ['28', 104], ['29', 104], ['30', 104], ['31', 104], ['32', 104], ['33', 104], ['35', 101], ['36', 101], ['37', 101], ['38', 101], ['39', 101], ['40', 101], ['41', 101], ['42', 101], ['43', 101], ['44', 101], ['45', 101], ['46', 101], ['47', 101], ['48', 101], ['49', 101], ['50', 101], ['57', 110], ['58', 110], ['59', 110], ['60', 110], ['61', 110], ['62', 110], ['63', 110], ['64', 110], ['65', 110], ['66', 110]]
+
 
 def getServer(group):
 	"""
@@ -159,6 +160,9 @@ def parseFont(f):
 ################################################################
 # Anon id
 ################################################################
+
+# i don't know what the fuck got into my head while i wrote this, so
+# TODO: FIX DIS SHIT
 def getAnonId(n, ssid):
 	"""Gets the anon's id."""
 	if n == None: n = "5504"
@@ -213,7 +217,7 @@ def _getAuth(name, password):
 ################################################################
 # PM class
 ################################################################
-class PM:
+class PM(object):
 	"""Manages a connection with Chatango PM."""
 	####
 	# Init
@@ -423,7 +427,7 @@ class PM:
 ################################################################
 # Room class
 ################################################################
-class Room:
+class Room(object):
 	"""Manages a connection with a Chatango room."""
 	####
 	# Init
@@ -1130,7 +1134,7 @@ class Room:
 ################################################################
 # RoomManager class
 ################################################################
-class RoomManager:
+class RoomManager(object):
 	"""Class that manages multiple connections."""
 	####
 	# Config
@@ -1532,7 +1536,7 @@ class RoomManager:
 	####
 	# Scheduling
 	####
-	class _Task:
+	class _Task(object):
 		def cancel(self):
 			"""Sugar for removeTask."""
 			self.mgr.removeTask(self)
@@ -1749,7 +1753,7 @@ def User(name, *args, **kw):
 		_users[name] = user
 	return user
 
-class _User:
+class _User(object):
 	"""Class that represents a user."""
 	####
 	# Init
@@ -1833,7 +1837,7 @@ class _User:
 ################################################################
 # Message class
 ################################################################
-class Message:
+class Message(object):
 	"""Class that represents a message."""
 	####
 	# Attach/detach
@@ -1883,6 +1887,7 @@ class Message:
 	def getTime(self): return self._time
 	def getUser(self): return self._user
 	def getBody(self): return self._body
+	def getUid(self): return self._uid
 	def getIP(self): return self._ip
 	def getFontColor(self): return self._fontColor
 	def getFontFace(self): return self._fontFace
@@ -1896,6 +1901,7 @@ class Message:
 	time = property(getTime)
 	user = property(getUser)
 	body = property(getBody)
+	uid = property(getUid)
 	room = property(getRoom)
 	ip = property(getIP)
 	fontColor = property(getFontColor)
