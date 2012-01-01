@@ -681,6 +681,7 @@ class Room:
 			user = User(name),
 			body = msg,
 			raw = rawmsg,
+			uid = puid,
 			ip = ip,
 			nameColor = nameColor,
 			fontColor = fontColor,
