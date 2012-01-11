@@ -55,7 +55,6 @@ BigMessage_Cut      = 1
 specials = {'mitvcanal': 56, 'magicc666': 67, 'livenfree': 18, 'eplsiite': 56, 'soccerjumbo2': 21, 'bguk': 67, 'animachat20': 34, 'cricket365live': 21, 'pokemonepisodeorg': 22, 'sport24lt': 56, 'mywowpinoy': 5, 'phnoytalk': 21, 'futboldirectochat': 67, 'flowhot-chat-online': 12, 'watchanimeonn': 26, 'cricvid-hitcric-': 51, 'bobproctor': 56, 'fullsportshd2': 18, 'chia-anime': 12, 'narutochatt': 52, 'animeproxer': 55, 'ttvsports': 56, 'leeplarp': 27, 'portalsports': 18, 'stream2watch3': 56, 'proudlypinoychat': 51, 'ver-anime': 34, 'iluvpinas': 53, 'vipstand': 21, 'eafangames': 56, 'worldfootballusch2': 18, 'soccerjumbo': 21, 'myfoxdfw': 67, 'animelinkz': 20, 'rgsmotrisport': 51, 'bateriafina-8': 8, 'as-chatroom': 10, 'dbzepisodeorg': 12, 'watch-dragonball': 19, 'narutowire': 10, 'tvanimefreak': 54}
 tsweights = [['5', 61], ['6', 61], ['7', 61], ['8', 61], ['16', 61], ['17', 61], ['9', 90], ['11', 90], ['13', 90], ['14', 90], ['15', 90], ['23', 110], ['24', 110], ['25', 110], ['28', 104], ['29', 104], ['30', 104], ['31', 104], ['32', 104], ['33', 104], ['35', 101], ['36', 101], ['37', 101], ['38', 101], ['39', 101], ['40', 101], ['41', 101], ['42', 101], ['43', 101], ['44', 101], ['45', 101], ['46', 101], ['47', 101], ['48', 101], ['49', 101], ['50', 101], ['57', 110], ['58', 110], ['59', 110], ['60', 110], ['61', 110], ['62', 110], ['63', 110], ['64', 110], ['65', 110], ['66', 110]]
 
-
 def getServer(group):
 	"""
 	Get the server host for a certain room.
