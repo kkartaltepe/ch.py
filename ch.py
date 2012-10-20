@@ -114,7 +114,7 @@ def clean_message(msg):
     if f: f = f.group(1)
     msg = re.sub("<n.*?/>", "", msg)
     msg = re.sub("<f.*?>", "", msg)
-    msg = strip_html(msg)
+    msg = strip_html(msg[1:])
     msg = msg.replace("&lt;", "<")
     msg = msg.replace("&gt;", ">")
     msg = msg.replace("&quot;", "\"")
@@ -878,6 +878,7 @@ class Room(object):
             return
         msg = "<n" + self.user.nameColor + "/>" + msg
         msg = "<f x%0.2i%s=\"%s\">" %(self.user.fontSize, self.user.fontColor, self.user.fontFace) + msg
+        msg = "pi11:" + msg #we gotta figure out what this is but for now this works
         self.rawMessage(msg)
     
     def setBgMode(self, mode):
@@ -1078,6 +1079,7 @@ class Room(object):
             self._firstCommand = False
         else:
             terminator = b"\r\n\x00"
+        print(":".join(args).encode())
         self._write(":".join(args).encode() + terminator)
     
     def getLevel(self, user):
