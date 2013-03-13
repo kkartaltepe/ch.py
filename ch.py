@@ -296,6 +296,8 @@ class PM(object):
         @param data: the command string
         """
         self._callEvent("onRaw", data)
+        if Debug:
+            print("<<<" + str(data))
         data = data.split(":")
         cmd, args = data[0], data[1:]
         func = "rcmd_" + cmd
