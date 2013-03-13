@@ -1648,7 +1648,6 @@ class RoomManager(object):
                 except socket.error:
                     pass
             self._tick()
-    
     @classmethod
     def easy_start(cl, rooms = None, name = None, password = None, pm = True):
         """
@@ -1661,16 +1660,20 @@ class RoomManager(object):
         @type password: str
         @param password: password to join with ("" = None, None = unspecified)
         """
-        if not rooms: rooms = str(input("Room names separated by semicolons: ")).split(";")
-        if len(rooms) == 1 and rooms[0] == "": rooms = []
-        if not name: name = str(input("User name: "))
-        if name == "": name = None
-        if not password: password = str(input("User password: "))
-        if password == "": password = None
-        self = cl(name, password, pm = pm)
-        for room in rooms:
-            self.joinRoom(room)
-        self.main()
+        try:
+            if not rooms: rooms = str(input("Room names separated by semicolons: ")).split(";")
+            if len(rooms) == 1 and rooms[0] == "": rooms = []
+            if not name: name = str(input("User name: "))
+            if name == "": name = None
+            if not password: password = str(input("User password: "))
+            if password == "": password = None
+            self = cl(name, password, pm = pm)
+            for room in rooms:
+                self.joinRoom(room)
+            self.main()
+        except KeyboardInterrupt:
+            print("\n");
+            sys.exit(0);
     
     def stop(self):
         for conn in list(self._rooms.values()):
