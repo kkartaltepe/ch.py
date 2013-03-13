@@ -26,7 +26,7 @@ import random
 import re
 import sys
 import select
-
+import traceback
 
 ################################################################
 # Python 2 compatibility
@@ -48,6 +48,8 @@ Userlist_All    = 1
 
 BigMessage_Multiple = 0
 BigMessage_Cut      = 1
+
+Debug = False
 
 ################################################################
 # Tagserver stuff
@@ -250,12 +252,13 @@ class PM(object):
     
     def _auth(self):
         self._auid = _getAuth(self._mgr.name, self._mgr.password)
+
         if self._auid == None:
             self._sock.close()
             self._callEvent("onLoginFail")
             self._sock = None
             return False
-        self._sendCommand("tlogin", self._auid, "2")
+        self._sendCommand("v")
         self._setWriteLock(True)
         return True
     
@@ -402,6 +405,8 @@ class PM(object):
             self._wlockbuf += data
         else:
             self.mgr._write(self, data)
+            if Debug:
+                print(">>>" + str(data))
     
     def _setWriteLock(self, lock):
         self._wlock = lock
@@ -518,6 +523,8 @@ class Room(object):
         self._userlist = list()
         self._pingTask.cancel()
         self._sock.close()
+        if Debug:
+            traceback.print_stack()
         if not self._reconnecting: del self.mgr._rooms[self.name]
     
     def _auth(self):
@@ -600,6 +607,8 @@ class Room(object):
         @param data: the command string
         """
         self._callEvent("onRaw", data)
+        if Debug:
+            print("<<<" + str(data))
         data = data.split(":")
         cmd, args = data[0], data[1:]
         func = "rcmd_" + cmd
@@ -610,7 +619,7 @@ class Room(object):
     # Received Commands
     ####
     def rcmd_ok(self, args):
-        if args[2] != "M": #unsuccesful login
+        if args[2] != "M" and args[2] != "C": #unsuccesful login
             self._callEvent("onLoginFail")
             self.disconnect()
         self._owner = User(args[0])
@@ -624,9 +633,13 @@ class Room(object):
         self._callEvent("onConnectFail")
     
     def rcmd_inited(self, args):
-        self._sendCommand("g_participants", "start")
-        self._sendCommand("getpremium", "1")
-        self.requestBanlist()
+        if self._mgr.name:
+            self._sendCommand("g_participants", "start")
+            self._sendCommand("getpremium", "1")
+            self.requestBanlist()
+        else:
+            print("IM ANON")
+
         if self._connectAmmount == 0:
             self._callEvent("onConnect")
             for msg in reversed(self._i_log):
@@ -1060,6 +1073,8 @@ class Room(object):
             self._wlockbuf += data
         else:
             self.mgr._write(self, data)
+            if Debug:
+                print(">>>" + str(data))
     
     def _setWriteLock(self, lock):
         self._wlock = lock
@@ -1079,8 +1094,7 @@ class Room(object):
             self._firstCommand = False
         else:
             terminator = b"\r\n\x00"
-        print(":".join(args).encode())
-        self._write(":".join(args).encode() + terminator)
+        self._write(":".join(arg for arg in args if arg or arg=="").encode() + terminator)
     
     def getLevel(self, user):
         if user == self._owner: return 2
@@ -1750,7 +1764,7 @@ class RoomManager(object):
 ################################################################
 _users = dict()
 def User(name, *args, **kw):
-    name = name.lower()
+    name = name.lower() if name else None
     user = _users.get(name)
     if not user:
         user = _User(name = name, *args, **kw)
@@ -1763,7 +1777,7 @@ class _User(object):
     # Init
     ####
     def __init__(self, name, **kw):
-        self._name = name.lower()
+        self._name = name.lower() if name else "(Me)"
         self._sids = dict()
         self._msgs = list()
         self._nameColor = "000"

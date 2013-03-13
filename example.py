@@ -2,6 +2,8 @@ import ch
 import random
 import sys
 import re
+import time
+
 if sys.version_info[0] > 2:
     import urllib.request as urlreq
 else:
@@ -27,6 +29,7 @@ class TestBot(ch.RoomManager):
     
     def onConnect(self, room):
         print("Connected")
+        print("You are level: " + str(room.getLevel(self.user)))
     
     def onReconnect(self, room):
         print("Reconnected")
@@ -38,7 +41,7 @@ class TestBot(ch.RoomManager):
         if room.getLevel(self.user) > 0:
             print(user.name, message.ip, message.body)
         else:
-            print(user.name, message.body)
+            print(formatMsg(message))
     
     def onFloodWarning(self, room):
         room.reconnect()
@@ -57,5 +60,8 @@ class TestBot(ch.RoomManager):
     
     def onPMMessage(self, pm, user, body):
         print("you got a message!")
+
+def formatMsg(message):
+    return "<" + time.ctime(message.time) + ">" + str(message.user.name) + ": " + str(message.body)
 
 if __name__ == "__main__": TestBot.easy_start()
