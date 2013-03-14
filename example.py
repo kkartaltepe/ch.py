@@ -78,6 +78,13 @@ class TestBot(ch.RoomManager):
            message.body[0]==TRIGGER_CHAR):
             handleCommand(pm, message)
         print("you got a message!")
+    
+    def onLoginFail(self, room):
+        print("Login failed in " + room.name + ", continuing as anon")
+    
+    def onPMLoginFail(self, PM):
+        print("Login to PM system failed")
+
 
 def formatMsg(message):
     return u"<" + time.ctime(message.time) + u">" + message.user.name + u": " + message.body

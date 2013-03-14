@@ -255,7 +255,7 @@ class PM(object):
 
         if self._auid == None:
             self._sock.close()
-            self._callEvent("onLoginFail")
+            self._callEvent("onPMLoginFail")
             self._sock = None
             return False
         self._sendCommand("v")
@@ -297,7 +297,7 @@ class PM(object):
         """
         self._callEvent("onRaw", data)
         if Debug:
-            print("<<<" + str(data))
+            print("<<<" + data)
         data = data.split(":")
         cmd, args = data[0], data[1:]
         func = "rcmd_" + cmd
@@ -340,7 +340,7 @@ class PM(object):
     
     def rcmd_DENIED(self, args):
         self._disconnect()
-        self._callEvent("onLoginFail")
+        self._callEvent("onPMLoginFail")
     
     def rcmd_msg(self, args):
         user = User(args[0])
@@ -408,7 +408,7 @@ class PM(object):
         else:
             self.mgr._write(self, data)
             if Debug:
-                print(">>>" + str(data))
+                print(">>>" + data)
     
     def _setWriteLock(self, lock):
         self._wlock = lock
@@ -610,7 +610,7 @@ class Room(object):
         """
         self._callEvent("onRaw", data)
         if Debug:
-            print("<<<" + str(data))
+            print("<<<" + data)
         data = data.split(":")
         cmd, args = data[0], data[1:]
         func = "rcmd_" + cmd
@@ -621,9 +621,9 @@ class Room(object):
     # Received Commands
     ####
     def rcmd_ok(self, args):
-        if args[2] != "M" and args[2] != "C": #unsuccesful login
+        if args[2] != "M": #unsuccesful login
             self._callEvent("onLoginFail")
-            self.disconnect()
+            # self.disconnect() we want to allow anonymous connection
         self._owner = User(args[0])
         self._uid = args[1]
         self._aid = args[1][4:8]
@@ -1074,7 +1074,7 @@ class Room(object):
         else:
             self.mgr._write(self, data)
             if Debug:
-                print(">>>" + str(data))
+                print(">>>" + data)
     
     def _setWriteLock(self, lock):
         self._wlock = lock
@@ -1293,12 +1293,22 @@ class RoomManager(object):
     
     def onLoginFail(self, room):
         """
-        Called on login failure, disconnects after.
+        Called on login failure, continues to connect as anon.
         
         @type room: Room
         @param room: room where the event occured
         """
         pass
+    
+    def onPMLoginFail(self, PM):
+        """
+        Called on PM login failure, disconnects after.
+        
+        @type PM: PM
+        @param PM: PM object where the event occured
+        """
+        pass
+
     
     def onFloodBan(self, room):
         """
