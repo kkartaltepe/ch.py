@@ -598,7 +598,7 @@ class Room(object):
         while self._rbuf.find(b"\x00") != -1:
             data = self._rbuf.split(b"\x00")
             for food in data[:-1]:
-                self._process(food.decode().rstrip("\r\n")) #numnumz ;3
+                self._process(food.decode('utf-8').rstrip("\r\n")) #numnumz ;3
             self._rbuf = data[-1]
     
     def _process(self, data):
@@ -636,11 +636,9 @@ class Room(object):
     
     def rcmd_inited(self, args):
         if self._mgr.name:
-            self._sendCommand("g_participants", "start")
             self._sendCommand("getpremium", "1")
             self.requestBanlist()
-        else:
-            print("IM ANON")
+        self._sendCommand("g_participants", "start")
 
         if self._connectAmmount == 0:
             self._callEvent("onConnect")
@@ -1688,8 +1686,8 @@ class RoomManager(object):
                 self.joinRoom(room)
             self.main()
         except KeyboardInterrupt:
-            print("\n");
-            sys.exit(0);
+            self.stop()
+            sys.exit(0)
     
     def stop(self):
         for conn in list(self._rooms.values()):
