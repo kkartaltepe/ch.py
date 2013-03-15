@@ -49,7 +49,7 @@ class TestBot(ch.RoomManager):
         print("Disconnected")
     
     def onMessage(self, room, user, message):
-        if room.getLevel(self.user) > 0:
+        if room.getLevel(room.getUser) > 0:
             print(user.name, message.ip, message.body)
         else:
             print(formatMsg(message))
@@ -80,7 +80,10 @@ class TestBot(ch.RoomManager):
         print("you got a message!")
     
     def onLoginFail(self, room):
-        print("Login failed in " + room.name + ", continuing as anon")
+        print("Login failed in " + room.name)
+    
+    def onLoginSuccess(self, room):
+        print("Login succeeded in room " + room.name)
     
     def onPMLoginFail(self, PM):
         print("Login to PM system failed")

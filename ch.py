@@ -223,9 +223,11 @@ class PM(object):
     ####
     # Init
     ####
-    def __init__(self, mgr):
+    def __init__(self, username, password, mgr):
         self._connected = False
         self._mgr = mgr
+        self._username = username
+        self._password = password
         self._auid = None
         self._blocklist = set()
         self._contacts = set()
@@ -251,7 +253,7 @@ class PM(object):
         self._connected = True
     
     def _auth(self):
-        self._auid = _getAuth(self._mgr.name, self._mgr.password)
+        self._auid = _getAuth(self._username, self._password)
 
         if self._auid == None:
             self._sock.close()
@@ -438,11 +440,14 @@ class Room(object):
     ####
     # Init
     ####
-    def __init__(self, room, uid = None, server = None, port = None, mgr = None):
+    def __init__(self, room, uid = None, server = None, port = None, name =
+                 None, password = None, mgr = None):
         # Basic stuff
         self._name = room
         self._server = server or getServer(room)
         self._port = port or 443
+        self._username = name
+        self._password = password
         self._mgr = mgr
         
         # Under the hood
@@ -531,7 +536,7 @@ class Room(object):
     
     def _auth(self):
         """Authenticate."""
-        self._sendCommand("bauth", self.name, self._uid, self.mgr.name, self.mgr.password)
+        self._sendCommand("bauth", self.name, self._uid, self._username, self._password)
         self._setWriteLock(True)
     
     ####
@@ -555,7 +560,7 @@ class Room(object):
     def getUserNames(self):
         ul = self.userlist
         return list(map(lambda x: x.name, ul))
-    def getUser(self): return self.mgr.user
+    def getUser(self): return self.findUser(self._username)
     def getOwner(self): return self._owner
     def getOwnerName(self): return self._owner.name
     def getMods(self):
@@ -621,7 +626,9 @@ class Room(object):
     # Received Commands
     ####
     def rcmd_ok(self, args):
-        if args[2] != "M": #unsuccesful login
+        if args[2] != "M" and self._username: #unsuccesful login
+            self._username = None
+            self._password = None
             self._callEvent("onLoginFail")
             # self.disconnect() we want to allow anonymous connection
         self._owner = User(args[0])
@@ -635,7 +642,7 @@ class Room(object):
         self._callEvent("onConnectFail")
     
     def rcmd_inited(self, args):
-        if self._mgr.name:
+        if self._password:  # We are logged in as a memeber
             self._sendCommand("getpremium", "1")
             self.requestBanlist()
         self._sendCommand("g_participants", "start")
@@ -655,8 +662,9 @@ class Room(object):
     def rcmd_premium(self, args):
         if float(args[1]) > time.time():
             self._premium = True
-            if self.user._mbg: self.setBgMode(1)
-            if self.user._mrec: self.setRecordingMode(1)
+            #TODO: fix
+            # if self.user._mbg: self.setBgMode(1)
+            # if self.user._mrec: self.setRecordingMode(1)
         else:
             self._premium = False
     
@@ -853,6 +861,26 @@ class Room(object):
         self._callEvent("onUnban", user, target)
         self.requestBanlist()
     
+    def rcmd_pwdok(self, args):
+        loginType = "member"
+        self._callEvent("onLoginSuccess", loginType, args)
+    
+    def rcmd_aliasok(self, args):
+        loginType = "alias"
+        self._callEvent("onLoginSuccess", loginType, args)
+    
+    def rcmd_badalias(self, args):
+        self._username = None
+        self._callEvent("onLoginFail", args)
+    
+    def rcmd_badlogin(self, args):
+        self._username = None
+        self._password = None
+        self._callEvent("onLoginFail", args)
+
+    def rcmd_logoutok(self, args):
+        self._callEvent("onLogoutSuccess", args)
+    
     ####
     # Commands
     ####
@@ -889,11 +917,22 @@ class Room(object):
                     msg = msg[self.mgr._maxLength:]
                     self.message(sect, html = html)
             return
-        msg = "<n" + self.user.nameColor + "/>" + msg
-        msg = "<f x%0.2i%s=\"%s\">" %(self.user.fontSize, self.user.fontColor, self.user.fontFace) + msg
+        if(self.user and self._password):  # only if we are logged in
+            msg = "<n" + self.user.nameColor + "/>" + msg
+            msg = "<f x%0.2i%s=\"%s\">" %(self.user.fontSize, self.user.fontColor, self.user.fontFace) + msg
         msg = "pi11:" + msg #we gotta figure out what this is but for now this works
         self.rawMessage(msg)
     
+    def login(self, name, password = None):
+        if(self._password):
+            self.logout()
+        self._username = name
+        self._password = password
+        self.sendCommand("blogin", str(name), password)
+
+    def logout(self):
+        self.sendCommand("blogout")
+
     def setBgMode(self, mode):
         self._sendCommand("msgbg", str(mode))
     
@@ -1120,6 +1159,8 @@ class Room(object):
         return None
     
     def findUser(self, name):
+        if not name:
+            return None #user is me TODO: fix this
         name = name.lower()
         ul = self.getUserlist()
         udi = dict(zip([u.name for u in ul], ul))
@@ -1171,21 +1212,16 @@ class RoomManager(object):
     ####
     # Init
     ####
-    def __init__(self, name = None, password = None, pm = True):
-        self._name = name
-        self._password = password
+    def __init__(self):
         self._running = False
         self._tasks = set()
         self._rooms = dict()
-        if pm:
-            self._pm = self._PM(mgr = self)
-        else:
-            self._pm = None
+        self._pm = None
     
     ####
     # Join/leave
     ####
-    def joinRoom(self, room):
+    def joinRoom(self, room, name = None, password = None):
         """
         Join a room or return None if already joined.
         
@@ -1197,11 +1233,14 @@ class RoomManager(object):
         """
         room = room.lower()
         if room not in self._rooms:
-            con = self._Room(room, mgr = self)
+            con = self._Room(room, name = name, password = password, mgr = self)
             self._rooms[room] = con
             return con
         else:
             return None
+    
+    def loginToPM(self, username, password):
+        self._pm = self._PM(mgr = self)
     
     def leaveRoom(self, room):
         """
@@ -1234,16 +1273,10 @@ class RoomManager(object):
     ####
     # Properties
     ####
-    def getUser(self): return User(self._name)
-    def getName(self): return self._name
-    def getPassword(self): return self._password
     def getRooms(self): return set(self._rooms.values())
     def getRoomNames(self): return set(self._rooms.keys())
     def getPM(self): return self._pm
     
-    user = property(getUser)
-    name = property(getName)
-    password = property(getPassword)
     rooms = property(getRooms)
     roomnames = property(getRoomNames)
     pm = property(getPM)
@@ -1291,9 +1324,18 @@ class RoomManager(object):
         """
         pass
     
+    def onLoginSuccess(self, room):
+        """
+        Called on login success to a room
+        
+        @type room: Room
+        @param room: room where the event occured
+        """
+        pass
+    
     def onLoginFail(self, room):
         """
-        Called on login failure, continues to connect as anon.
+        Called on login failure to a room
         
         @type room: Room
         @param room: room where the event occured
@@ -1673,16 +1715,17 @@ class RoomManager(object):
                     pass
             self._tick()
     @classmethod
-    def easy_start(cl, rooms = None, name = None, password = None, pm = True):
+    def easy_start(cl, rooms = None, name = None, password = None, pm = False):
         """
         Prompts the user for missing info, then starts.
         
         @type rooms: list
         @param room: rooms to join
         @type name: str
-        @param name: name to join as ("" = None, None = unspecified)
+        @param name: name to join as ("" = None, None = as anon)
         @type password: str
-        @param password: password to join with ("" = None, None = unspecified)
+        @param password: password to join with ("" = None, None = as anon or
+            alias)
         """
         try:
             if not rooms: rooms = str(input("Room names separated by semicolons: ")).split(";")
@@ -1691,9 +1734,9 @@ class RoomManager(object):
             if name == "": name = None
             if not password: password = str(input("User password: "))
             if password == "": password = None
-            self = cl(name, password, pm = pm)
+            self = cl()
             for room in rooms:
-                self.joinRoom(room)
+                self.joinRoom(room, name, password)
             self.main()
         except KeyboardInterrupt:
             self.stop()
@@ -1709,25 +1752,21 @@ class RoomManager(object):
     ####
     def enableBg(self):
         """Enable background if available."""
-        self.user._mbg = True
         for room in self.rooms:
             room.setBgMode(1)
     
     def disableBg(self):
         """Disable background."""
-        self.user._mbg = False
         for room in self.rooms:
             room.setBgMode(0)
     
     def enableRecording(self):
         """Enable recording if available."""
-        self.user._mrec = True
         for room in self.rooms:
             room.setRecordingMode(1)
     
     def disableRecording(self):
         """Disable recording."""
-        self.user._mrec = False
         for room in self.rooms:
             room.setRecordingMode(0)
     
@@ -1738,7 +1777,7 @@ class RoomManager(object):
         @type color3x: str
         @param color3x: a 3-char RGB hex code for the color
         """
-        self.user._nameColor = color3x
+        # self.user._nameColor = color3x
     
     def setFontColor(self, color3x):
         """
@@ -1747,7 +1786,7 @@ class RoomManager(object):
         @type color3x: str
         @param color3x: a 3-char RGB hex code for the color
         """
-        self.user._fontColor = color3x
+        # self.user._fontColor = color3x
     
     def setFontFace(self, face):
         """
@@ -1756,7 +1795,7 @@ class RoomManager(object):
         @type face: str
         @param face: the font face
         """
-        self.user._fontFace = face
+        # self.user._fontFace = face
     
     def setFontSize(self, size):
         """
@@ -1767,7 +1806,7 @@ class RoomManager(object):
         """
         if size < 9: size = 9
         if size > 22: size = 22
-        self.user._fontSize = size
+        # self.user._fontSize = size
 
 ################################################################
 # User class (well, yeah, i lied, it's actually _User)
@@ -1913,6 +1952,7 @@ class Message(object):
     ####
     def getId(self): return self._msgid
     def getTime(self): return self._time
+    def getUser(self): return self._user
     def getUser(self): return self._user
     def getBody(self): return self._body
     def getUid(self): return self._uid
