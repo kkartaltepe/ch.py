@@ -902,23 +902,23 @@ class Room(object):
     
     def rcmd_pwdok(self, args):
         loginType = "member"
-        self._callEvent("onLoginSuccess", loginType, args)
+        self._callEvent("onLoginSuccess", loginType)
     
     def rcmd_aliasok(self, args):
         loginType = "alias"
-        self._callEvent("onLoginSuccess", loginType, args)
+        self._callEvent("onLoginSuccess", loginType)
     
     def rcmd_badalias(self, args):
         self._username = None
-        self._callEvent("onLoginFail", args)
+        self._callEvent("onLoginFail")
     
     def rcmd_badlogin(self, args):
         self._username = None
         self._password = None
-        self._callEvent("onLoginFail", args)
+        self._callEvent("onLoginFail")
 
     def rcmd_logoutok(self, args):
-        self._callEvent("onLogoutSuccess", args)
+        self._callEvent("onLogoutSuccess")
     
     ####
     # Commands
@@ -978,10 +978,10 @@ class Room(object):
             self.logout()
         self._username = name
         self._password = password
-        self.sendCommand("blogin", str(name), password)
+        self._sendCommand("blogin", str(name), password)
 
     def logout(self):
-        self.sendCommand("blogout")
+        self._sendCommand("blogout")
 
     def setBgMode(self, mode):
         self._settings._mbg = mode
@@ -1379,9 +1379,18 @@ class RoomManager(object):
         """
         pass
     
-    def onLoginSuccess(self, room):
+    def onLoginSuccess(self, room, loginType):
         """
         Called on login success to a room
+        
+        @type room: Room
+        @param room: room where the event occured
+        """
+        pass
+    
+    def onLogoutSuccess(self, room):
+        """
+        Called on logout success to a room
         
         @type room: Room
         @param room: room where the event occured

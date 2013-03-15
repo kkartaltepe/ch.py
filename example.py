@@ -18,12 +18,10 @@ def getTop4LWord(room, args):
                  + "(" + str(top4LWord[1]) + ")")
 
 def login(room, args):
-    if len(args) < 1:
-        return
-    elif len(args) == 1:
-        room.login(args[0])
-    else:
+    if args and len(args) > 1:
         room.login(args[0], args[1])
+    elif args:
+        room.login(args[0], None)
 
 def logout(room, args):
     room.logout(args)
@@ -99,7 +97,7 @@ class TestBot(ch.RoomManager):
     def onLoginFail(self, room):
         print("Login failed in " + room.name)
     
-    def onLoginSuccess(self, room):
+    def onLoginSuccess(self, room, loginType):
         print("Login succeeded in room " + room.name)
     
     def onPMLoginFail(self, PM):
@@ -153,7 +151,7 @@ def analyzeMsg(message):
 def handleCommand(room, message):
     commandAndArg = message.body[1:].split(" ", 1)
     command = commandAndArg[0]
-    args = None if len(commandAndArg)<2 else commandAndArg[1]
+    args = None if len(commandAndArg)<2 else commandAndArg[1].split(" ")
     commandList.get(command, lambda room, args: None)(room, args)
 
 def getPollResults(votes):
