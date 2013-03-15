@@ -178,6 +178,42 @@ def getAnonId(n, ssid):
         return "NNNN"
 
 ################################################################
+# Settings class
+################################################################
+class Settings(object):
+    """Class that represents a the clients settings."""
+
+    ####
+    # Init
+    ####
+    def __init__(self):
+        self._mbg = 0
+        self._mrec = 0
+        self._fontColor = "AAA"
+        self._fontFace = "1"
+        self._fontSize = 12
+        self._nameColor = "000"
+    
+    def getBackgroundMode(self): return self_.mbg
+    def getRecordingMode(self): return self_mrec
+    def getFontColor(self): return self._fontColor
+    def getFontFace(self): return self._fontFace
+    def getFontSize(self): return self._fontSize
+    def getNameColor(self): return self._nameColor
+    
+    def setFontSize(self, size):
+        if size < 9: size = 9
+        if size > 22: size = 22
+        self._fontSize = size
+    
+    bgm = property(getBackgroundMode)
+    mrec = property(getRecordingMode)
+    fontColor = property(getFontColor)
+    fontFace = property(getFontFace)
+    fontSize = property(getFontSize, setFontSize)
+    nameColor = property(getNameColor)
+
+################################################################
 # PM Auth
 ################################################################
 auth_re = re.compile(r"auth\.chatango\.com ?= ?([^;]*)", re.IGNORECASE)
@@ -472,6 +508,7 @@ class Room(object):
         self._wlock = False
         self._silent = False
         self._banlist = list()
+        self._settings = self._mgr.settings
         
         # Inited vars
         if self._mgr: self._connect()
@@ -575,6 +612,7 @@ class Room(object):
     def getSilent(self): return self._silent
     def setSilent(self, val): self._silent = val
     def getBanlist(self): return [record[2] for record in self._banlist]
+    def getSettings(self): return self._settings
         
     name = property(getName)
     mgr = property(getManager)
@@ -588,6 +626,7 @@ class Room(object):
     usercount = property(getUserCount)
     silent = property(getSilent, setSilent)
     banlist = property(getBanlist)
+    settings = property(getSettings)
     
     ####
     # Feed/process
@@ -663,8 +702,8 @@ class Room(object):
         if float(args[1]) > time.time():
             self._premium = True
             #TODO: fix
-            # if self.user._mbg: self.setBgMode(1)
-            # if self.user._mrec: self.setRecordingMode(1)
+            if self._settings._mbg: self.setBgMode(1)
+            if self._settings._mrec: self.setRecordingMode(1)
         else:
             self._premium = False
     
@@ -918,12 +957,23 @@ class Room(object):
                     self.message(sect, html = html)
             return
         if(self.user and self._password):  # only if we are logged in
-            msg = "<n" + self.user.nameColor + "/>" + msg
-            msg = "<f x%0.2i%s=\"%s\">" %(self.user.fontSize, self.user.fontColor, self.user.fontFace) + msg
+            msg = "<n" + self.settings.nameColor + "/>" + msg
+            msg = "<f x%0.2i%s=\"%s\">" %(self.settings.fontSize,
+                                          self.settings.fontColor,
+                                          self.settings.fontFace) + msg
         msg = "pi11:" + msg #we gotta figure out what this is but for now this works
         self.rawMessage(msg)
     
     def login(self, name, password = None):
+        """
+        Login with given credentials.
+
+        @type name: str
+        @param name: username
+
+        @type password: str
+        @param password: password
+        """
         if(self._password):
             self.logout()
         self._username = name
@@ -934,9 +984,11 @@ class Room(object):
         self.sendCommand("blogout")
 
     def setBgMode(self, mode):
+        self._settings._mbg = mode
         self._sendCommand("msgbg", str(mode))
     
     def setRecordingMode(self, mode):
+        self._settings._mrec = mode
         self._sendCommand("msgmedia", str(mode))
 
     def addMod(self, user):
@@ -1196,6 +1248,7 @@ class RoomManager(object):
     # Config
     ####
     _Room = Room
+    _settings = Settings()
     _PM = PM
     _PMHost = "c1.chatango.com"
     _PMPort = 5222
@@ -1276,10 +1329,12 @@ class RoomManager(object):
     def getRooms(self): return set(self._rooms.values())
     def getRoomNames(self): return set(self._rooms.keys())
     def getPM(self): return self._pm
+    def getSettings(self): return self._settings
     
     rooms = property(getRooms)
     roomnames = property(getRoomNames)
     pm = property(getPM)
+    settings = property(getSettings)
     
     ####
     # Virtual methods
@@ -1753,22 +1808,26 @@ class RoomManager(object):
     def enableBg(self):
         """Enable background if available."""
         for room in self.rooms:
-            room.setBgMode(1)
+            room.settings._mbg = 1
+        self._settings._mbg = 1
     
     def disableBg(self):
         """Disable background."""
         for room in self.rooms:
-            room.setBgMode(0)
+            room.settings._mbg = 0
+        self._settings._mbg = 0
     
     def enableRecording(self):
         """Enable recording if available."""
         for room in self.rooms:
-            room.setRecordingMode(1)
+            room.settings._mrec = 1
+        self._settings._mrec = 1
     
     def disableRecording(self):
         """Disable recording."""
         for room in self.rooms:
-            room.setRecordingMode(0)
+            room.settings._mrec = 0
+        self._settings._mrec = 0
     
     def setNameColor(self, color3x):
         """
@@ -1777,7 +1836,9 @@ class RoomManager(object):
         @type color3x: str
         @param color3x: a 3-char RGB hex code for the color
         """
-        # self.user._nameColor = color3x
+        for room in self.rooms:
+            room.settings._nameColor = color3x
+        self._settings._nameColor = color3x
     
     def setFontColor(self, color3x):
         """
@@ -1786,7 +1847,9 @@ class RoomManager(object):
         @type color3x: str
         @param color3x: a 3-char RGB hex code for the color
         """
-        # self.user._fontColor = color3x
+        for room in self.rooms:
+            room.settings._fontColor = color3x
+        self._settings._fontColor = color3x
     
     def setFontFace(self, face):
         """
@@ -1795,7 +1858,9 @@ class RoomManager(object):
         @type face: str
         @param face: the font face
         """
-        # self.user._fontFace = face
+        for room in self.rooms:
+            room.settings._fontFace = face
+        self._settings._fontFace = face
     
     def setFontSize(self, size):
         """
@@ -1804,9 +1869,9 @@ class RoomManager(object):
         @type size: int
         @param size: the font size (limited: 9 to 22)
         """
-        if size < 9: size = 9
-        if size > 22: size = 22
-        # self.user._fontSize = size
+        for room in self.rooms:
+            room.settings.fontSize = size
+        self._settings.fontSize = size
 
 ################################################################
 # User class (well, yeah, i lied, it's actually _User)
@@ -1978,3 +2043,10 @@ class Message(object):
     raw = property(getRaw)
     nameColor = property(getNameColor)
     unid = property(getUnid)
+    
+    ####
+    # Repr
+    ####
+    def __repr__(self):
+        return u"<" + time.ctime(self._time) + u">" + self._user.name + u": " +self.body
+

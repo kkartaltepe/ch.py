@@ -17,12 +17,24 @@ def getTop4LWord(room, args):
     room.message("The top 4+ letter word so far is: " + top4LWord[0]
                  + "(" + str(top4LWord[1]) + ")")
 
+def login(room, args):
+    if len(args) < 1:
+        return
+    elif len(args) == 1:
+        room.login(args[0])
+    else:
+        room.login(args[0], args[1])
+
+def logout(room, args):
+    room.logout(args)
 
 dictionary = dict() #volatile... of course...
 wordCount = dict()
 adminList = ["botsmcgee"]
 commandList = {"topword": getTopWord,
-               "top4lword": getTop4LWord}
+               "top4lword": getTop4LWord,
+               "login": login,
+               "logout": logout}
 TRIGGER_CHAR = '!'
 topWord = "", 0
 top4LWord = "", 0
@@ -97,8 +109,8 @@ class TestBot(ch.RoomManager):
         self.voters[room.name] = list()
         self.votes[room.name] = dict()
         self.polling[room.name] = True
-        room.message("Polling has begun please vote a number 0-9 (only your
-                     first number will be counted. You only get one vote)")
+        room.message("Polling has begun please vote a number 0-9 (only your" +
+                     "first number will be counted. You only get one vote)")
     
     def endPoll(self, room, args):
         if not self.polling[room.name]:
