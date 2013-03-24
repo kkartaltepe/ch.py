@@ -89,8 +89,8 @@ class TestBot(ch.RoomManager):
         print("Uh oh message deleted")
     
     def onPMMessage(self, pm, user, body):
-        if(message.user.name in adminList and
-           message.body[0]==TRIGGER_CHAR):
+        if(user.name in adminList and
+           body[0]==TRIGGER_CHAR):
             handleCommand(pm, message)
         print("you got a message!")
     
@@ -99,6 +99,9 @@ class TestBot(ch.RoomManager):
     
     def onLoginSuccess(self, room, loginType):
         print("Login succeeded in room " + room.name)
+    
+    def onPMConnect(self, pm):
+        print("Connected to PM")
     
     def onPMLoginFail(self, PM):
         print("Login to PM system failed")

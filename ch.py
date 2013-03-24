@@ -49,7 +49,7 @@ Userlist_All    = 1
 BigMessage_Multiple = 0
 BigMessage_Cut      = 1
 
-Debug = False
+Debug = True
 
 ################################################################
 # Tagserver stuff
@@ -296,7 +296,7 @@ class PM(object):
             self._callEvent("onPMLoginFail")
             self._sock = None
             return False
-        self._sendCommand("v")
+        self._sendCommand("tlogin", self._auid, "2")
         self._setWriteLock(True)
         return True
     
@@ -335,7 +335,7 @@ class PM(object):
         """
         self._callEvent("onRaw", data)
         if Debug:
-            print("<<<" + data)
+            print(">>>" + data)
         data = data.split(":")
         cmd, args = data[0], data[1:]
         func = "rcmd_" + cmd
@@ -1293,7 +1293,7 @@ class RoomManager(object):
             return None
     
     def loginToPM(self, username, password):
-        self._pm = self._PM(mgr = self)
+        self._pm = self._PM(username, password, mgr = self)
     
     def leaveRoom(self, room):
         """
@@ -1801,6 +1801,8 @@ class RoomManager(object):
             self = cl()
             for room in rooms:
                 self.joinRoom(room, name, password)
+            if name and password:
+                self.loginToPM(name, password)
             self.main()
         except KeyboardInterrupt:
             self.stop()
