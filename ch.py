@@ -94,7 +94,7 @@ def getServer(group):
 ################################################################
 # Uid
 ################################################################
-def genUid():
+def genPUID():
     return str(random.randrange(10 ** 15, 10 ** 16))
 
 ################################################################
@@ -162,20 +162,17 @@ def parseFont(f):
 # Anon id
 ################################################################
 
-# i don't know what the fuck got into my head while i wrote this, so
-# TODO: FIX DIS SHIT
-def getAnonId(n, ssid):
+# Create the anonId using name color tag and puid as the seeds.
+def getAnonId(nTag, puid):
     """Gets the anon's id."""
-    if n == None: n = "5504"
-    try:
-        return "".join(list(
-            map(lambda x: str(x[0] + x[1])[-1], list(zip(
-                list(map(lambda x: int(x), n)),
-                list(map(lambda x: int(x), ssid[4:]))
-            )))
-        ))
-    except ValueError:
-        return "NNNN"
+    if nTag == None:
+        nTag = "0000"
+    anonId = ""
+    temp = puid[4:8]
+    for n in xrange(4):
+        theSum = int(temp[n]) + int(nTag[n])
+        anonId += str(theSum%10)
+    return anonId
 
 ################################################################
 # Settings class
@@ -489,7 +486,7 @@ class Room(object):
         # Under the hood
         self._connected = False
         self._reconnecting = False
-        self._uid = uid or genUid()
+        self._uid = uid or genPUID()
         self._rbuf = b""
         self._wbuf = b""
         self._wlockbuf = b""
@@ -550,7 +547,7 @@ class Room(object):
         self._reconnecting = True
         if self.connected:
             self._disconnect()
-        self._uid = genUid()
+        self._uid = genPUID()
         self._connect()
         self._reconnecting = False
     
@@ -1202,6 +1199,7 @@ class Room(object):
                         return msg
                     i += 1
             except IndexError:
+                print("No messages for user found")
                 return None
         else:
             try:

@@ -26,13 +26,18 @@ def login(room, args):
 def logout(room, args):
     room.logout(args)
 
+def echo(room, args):
+    if(args):
+        room.message(" ".join(args))
+
 dictionary = dict() #volatile... of course...
 wordCount = dict()
 adminList = ["botsmcgee"]
 commandList = {"topword": getTopWord,
                "top4lword": getTop4LWord,
                "login": login,
-               "logout": logout}
+               "logout": logout,
+               "echo": echo}
 TRIGGER_CHAR = '!'
 topWord = "", 0
 top4LWord = "", 0
@@ -89,8 +94,8 @@ class TestBot(ch.RoomManager):
         print("Uh oh message deleted")
     
     def onPMMessage(self, pm, user, body):
-        if(user.name in adminList and
-           body[0]==TRIGGER_CHAR):
+        if(message.user.name in adminList and
+           message.body[0]==TRIGGER_CHAR):
             handleCommand(pm, message)
         print("you got a message!")
     
@@ -99,9 +104,6 @@ class TestBot(ch.RoomManager):
     
     def onLoginSuccess(self, room, loginType):
         print("Login succeeded in room " + room.name)
-    
-    def onPMConnect(self, pm):
-        print("Connected to PM")
     
     def onPMLoginFail(self, PM):
         print("Login to PM system failed")
