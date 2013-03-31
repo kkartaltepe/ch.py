@@ -49,7 +49,7 @@ Userlist_All    = 1
 BigMessage_Multiple = 0
 BigMessage_Cut      = 1
 
-Debug = True
+Debug = False
 
 ################################################################
 # Tagserver stuff
