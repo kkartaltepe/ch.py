@@ -49,7 +49,7 @@ Userlist_All    = 1
 BigMessage_Multiple = 0
 BigMessage_Cut      = 1
 
-Debug = False
+Debug = True
 
 ################################################################
 # Tagserver stuff
@@ -166,7 +166,7 @@ def parseFont(f):
 def getAnonId(nTag, puid):
     """Gets the anon's id."""
     if nTag == None:
-        nTag = "0000"
+        nTag = "3452" # Magic number in chatango itself.
     anonId = ""
     temp = puid[4:8]
     for n in xrange(4):
